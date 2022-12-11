@@ -12,6 +12,7 @@ type Handler struct {
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	toSend := []byte("Hello")
 	_, err := w.Write(toSend)
+	log.Printf("Message: %s", toSend)
 	if err != nil {
 		log.Printf("error while writing on the body %s", err)
 	}
