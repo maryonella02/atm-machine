@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"net"
 	"net/rpc"
 )
@@ -29,13 +28,13 @@ type ListResponse struct {
 	Services []*Service
 }
 
-func (d *Discovery) Register(ctx context.Context, req *RegisterRequest, res *RegisterResponse) error {
+func (d *Discovery) Register(req *RegisterRequest, res *RegisterResponse) error {
 	d.Services = append(d.Services, req.Service)
 	return nil
 }
 
 // List lists the services registered with the discovery service.
-func (d *Discovery) List(ctx context.Context, req *ListRequest, res *ListResponse) error {
+func (d *Discovery) List(req *ListRequest, res *ListResponse) error {
 	res.Services = d.Services
 	return nil
 }
