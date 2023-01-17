@@ -1,32 +1,33 @@
 package main
 
 import (
+	"atm-machine/services/client/service"
+	"context"
 	"fmt"
-	"io"
-	"net/http"
-	"time"
+	"log"
 )
 
+// var (
+//
+//	addr = flag.String("addr", ":8080", "address of gateway")
+//
+// )
 func main() {
+	c := &service.Client{
+		Addr: "localhost:8080",
+	}
 
-	c := http.Client{Timeout: time.Duration(1) * time.Second}
-	req, err := http.NewRequest("GET", "http://localhost:8080", nil)
+	ctx := context.Background()
+	balance, err := c.GetBalance(ctx)
 	if err != nil {
-		fmt.Printf("error %s", err)
-		return
+		log.Fatal(err)
 	}
-	resp, err := c.Do(req)
-	if err != nil {
-		fmt.Printf("error %s", err)
-		return
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Printf("error %s", err)
-		return
-	}
-	fmt.Printf("Response status : %s \n", resp.Status)
-	fmt.Printf("Body : %s \n ", body)
+	fmt.Println("Balance:", balance)
 
+	amount := 50
+	balance, err = c.Withdraw(ctx, amount)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("New balance:", balance)
 }
