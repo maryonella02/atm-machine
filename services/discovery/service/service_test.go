@@ -35,7 +35,7 @@ var _ = Describe("Discovery", func() {
 		})
 
 		AfterEach(func() {
-			time.Sleep(1 * time.Second)
+			time.Sleep(30 * time.Millisecond)
 			discovery.Stop()
 			listener.Close()
 		})
