@@ -19,7 +19,7 @@ func (c *Client) GetBalance(ctx context.Context) (int, error) {
 
 	req := service.GetBalanceRequest{}
 	res := service.GetBalanceResponse{}
-	if err := conn.Call("MoneyOperations.GetBalance", &req, &res); err != nil {
+	if err := conn.Call("Gateway.GetBalance", &req, &res); err != nil {
 		return 0, err
 	}
 	return res.Balance, nil
@@ -36,7 +36,7 @@ func (c *Client) Withdraw(ctx context.Context, amount int) (int, error) {
 		Amount: amount,
 	}
 	res := service.WithdrawResponse{}
-	if err := conn.Call("MoneyOperations.Withdraw", &req, &res); err != nil {
+	if err := conn.Call("Gateway.Withdraw", &req, &res); err != nil {
 		return 0, err
 	}
 	return res.Balance, nil
