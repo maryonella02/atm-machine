@@ -8,6 +8,9 @@ import (
 
 type MoneyOperations struct {
 	Balance int
+	Port    string
+	Status  string
+	Stats   map[string]int
 }
 
 type WithdrawRequest struct {
@@ -24,12 +27,29 @@ type GetBalanceResponse struct {
 	Balance int
 }
 
+type ServiceStatusRequest struct{}
+
+type ServiceStatusResponse struct {
+	Status string
+	Port   string
+	Stats  map[string]int
+}
+
+func (m *MoneyOperations) ServiceStatus(req *ServiceStatusRequest, res *ServiceStatusResponse) error {
+	res.Status = m.Status
+	res.Port = m.Port
+	res.Stats = m.Stats
+	return nil
+}
+
 func (m *MoneyOperations) Withdraw(req *WithdrawRequest, res *WithdrawResponse) error {
 	if m.Balance < req.Amount {
 		return fmt.Errorf("insufficient funds")
 	}
 	m.Balance -= req.Amount
 	res.Balance = m.Balance
+
+	m.Stats["TotalWithdrawals"]++
 	return nil
 }
 
@@ -40,7 +60,12 @@ func (m *MoneyOperations) GetBalance(req *GetBalanceRequest, res *GetBalanceResp
 
 func (m *MoneyOperations) Start() error {
 	rpc.Register(m)
-	ln, err := net.Listen("tcp", ":8080")
+	rpc.HandleHTTP()
+	m.Port = "8080"
+	m.Status = "Running"
+	m.Stats = make(map[string]int)
+	m.Stats["TotalWithdrawals"] = 0
+	ln, err := net.Listen("tcp", ":"+m.Port)
 	if err != nil {
 		return err
 	}

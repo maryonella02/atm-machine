@@ -14,7 +14,7 @@ import (
 // )
 func main() {
 	c := &service.Client{
-		Addr: "localhost:8080",
+		Addr: "localhost:50052",
 	}
 
 	ctx := context.Background()

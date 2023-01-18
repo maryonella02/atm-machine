@@ -73,6 +73,12 @@ type ListResponse struct {
 	Addrs []string
 }
 
+type StatusResponse struct {
+	Status string
+	Port   string
+	Stats  map[string]int
+}
+
 // getMoneyOperationsClient is a helper function that calls the discovery service to find the
 // address of the money operations service and then returns an RPC client that can be used to call
 // methods on that service.
@@ -91,8 +97,22 @@ func (g *Gateway) getMoneyOperationsClient() (*rpc.Client, error) {
 		return nil, errors.New("money operations service not found")
 	}
 
-	// Connect to the money operations service using the address returned by the discovery service.
-	return rpc.Dial("tcp", res.Addrs[0])
+	client, err = rpc.Dial("tcp", res.Addrs[0])
+	if err != nil {
+		return nil, err
+	}
+
+	// Call the status endpoint to check the status of the money operations service
+	var status StatusResponse
+	err = client.Call("MoneyOperations.Status", &struct{}{}, &status)
+	if err != nil {
+		return nil, err
+	}
+	if status.Status != "OK" {
+		return nil, errors.New("money operations service is not available")
+	}
+
+	return client, nil
 }
 func main() {
 	lruCache := cache.NewLRUCache(1000)
