@@ -52,7 +52,7 @@ func (g *Gateway) Withdraw(req *WithdrawRequest, res *WithdrawResponse) error {
 	if err != nil {
 		return err
 	}
-	g.Cache.Set(req.CardNumber, res.Balance)
+	g.Cache.Set(req.Token, res.Balance)
 	return nil
 }
 
@@ -61,7 +61,7 @@ func (g *Gateway) GetBalance(req *GetBalanceRequest, res *GetBalanceResponse) er
 	if !g.isValidToken(req.CardNumber, req.Token) {
 		return errors.New("invalid token")
 	}
-	val, ok := g.Cache.Get(req.CardNumber)
+	val, ok := g.Cache.Get(req.Token)
 	balance := val.(int)
 	if ok {
 		res.Balance = balance
@@ -77,7 +77,7 @@ func (g *Gateway) GetBalance(req *GetBalanceRequest, res *GetBalanceResponse) er
 		return err
 	}
 
-	g.Cache.Set(req.CardNumber, res.Balance)
+	g.Cache.Set(req.Token, res.Balance)
 	return nil
 }
 func (g *Gateway) Authenticate(req *AuthenticateRequest, res *AuthenticateResponse) error {
@@ -86,6 +86,8 @@ func (g *Gateway) Authenticate(req *AuthenticateRequest, res *AuthenticateRespon
 	if req.CardNumber == "1234567890" && req.Pin == "1234" {
 		res.Token = "abcdefghijklmnopqrstuvwxyz"
 		g.Cache.Set(req.CardNumber, res.Token)
+		g.Cache.Set(res.Token, 1000)
+
 		return nil
 	}
 	return errors.New("invalid card number or pin")
