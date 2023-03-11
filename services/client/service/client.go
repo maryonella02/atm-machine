@@ -2,7 +2,6 @@ package service
 
 import (
 	"atm-machine/services/gateway/service"
-	"context"
 	"net/rpc"
 )
 
@@ -10,7 +9,7 @@ type Client struct {
 	Addr string
 }
 
-func (c *Client) Authenticate(ctx context.Context, cardNumber string, pin string) (string, error) {
+func (c *Client) Authenticate(cardNumber string, pin string) (string, error) {
 	conn, err := rpc.Dial("tcp", c.Addr)
 	if err != nil {
 		return "", err
@@ -29,7 +28,7 @@ func (c *Client) Authenticate(ctx context.Context, cardNumber string, pin string
 	return res.Token, nil
 }
 
-func (c *Client) GetBalance(ctx context.Context, cardNumber, token string) (int, error) {
+func (c *Client) GetBalance(cardNumber, token string) (int, error) {
 	conn, err := rpc.Dial("tcp", c.Addr)
 	if err != nil {
 		return 0, err
@@ -48,7 +47,7 @@ func (c *Client) GetBalance(ctx context.Context, cardNumber, token string) (int,
 	return res.Balance, nil
 }
 
-func (c *Client) Withdraw(ctx context.Context, cardNumber, token string, amount int) (int, error) {
+func (c *Client) Withdraw(cardNumber, token string, amount int) (int, error) {
 	conn, err := rpc.Dial("tcp", c.Addr)
 	if err != nil {
 		return 0, err

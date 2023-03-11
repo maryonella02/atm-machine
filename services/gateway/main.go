@@ -3,6 +3,7 @@ package main
 import (
 	"atm-machine/cache"
 	"atm-machine/services/gateway/service"
+	"fmt"
 	"log"
 	"net"
 	"net/rpc"
@@ -14,12 +15,14 @@ func main() {
 
 	// Create a Gateway instance and register it as an RPC server.
 	gateway := &service.Gateway{
-		DiscoveryAddr: "localhost:50051",
+		DiscoveryAddr: "localhost:8091",
 		Cache:         lruCache,
 	}
 	rpc.Register(gateway)
 
-	listener, err := net.Listen("tcp", ":50052")
+	listener, err := net.Listen("tcp", ":8090")
+	fmt.Printf("%s", listener.Addr().String())
+
 	if err != nil {
 		log.Fatal(err)
 	}

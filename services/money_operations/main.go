@@ -2,12 +2,7 @@ package main
 
 import (
 	"atm-machine/services/money_operations/service"
-	"flag"
 	"log"
-)
-
-var (
-	addr = flag.String("addr", ":8080", "address to listen on")
 )
 
 func main() {

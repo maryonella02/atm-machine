@@ -2,6 +2,8 @@ package service
 
 import (
 	"atm-machine/cache"
+	"atm-machine/services/discovery/service"
+	moneyService "atm-machine/services/money_operations/service"
 	"errors"
 	"fmt"
 	"net/rpc"
@@ -128,27 +130,29 @@ func (g *Gateway) getMoneyOperationsClient() (*rpc.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	var res ListResponse
-	err = client.Call("Discovery.List", &struct{}{}, &res)
+	var res = &service.ListResponse{}
+	var req service.ListRequest
+	err = client.Call("Discovery.List", &req, res)
 	if err != nil {
 		return nil, err
 	}
-	if len(res.Addrs) == 0 {
+
+	if len(res.Services) == 0 {
 		return nil, errors.New("money operations service not found")
 	}
 
-	client, err = rpc.Dial("tcp", res.Addrs[0])
+	client, err = rpc.Dial("tcp", ":"+res.Services[0].Addr)
 	if err != nil {
 		return nil, err
 	}
 
 	// Call the status endpoint to check the status of the money operations service
 	var status StatusResponse
-	err = client.Call("MoneyOperations.Status", &struct{}{}, &status)
+	err = client.Call("MoneyOperations.ServiceStatus", moneyService.ServiceStatusRequest{}, &status)
 	if err != nil {
 		return nil, err
 	}
-	if status.Status != "OK" {
+	if status.Status != "Running" {
 		return nil, errors.New("money operations service is not available")
 	}
 

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net"
@@ -32,51 +31,43 @@ type ListResponse struct {
 	Services []*Service
 }
 
-func (d *Discovery) Register(ctx context.Context, req *RegisterRequest, res *RegisterResponse) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-		if err := ValidateServiceData(req.Service); err != nil {
-			return err
-		}
-		if !serviceExists(req.Service, d.Services) {
-			d.Services = append(d.Services, req.Service)
-			return nil
-		}
-		return fmt.Errorf("service already registered")
+func (d *Discovery) Register(req *RegisterRequest, res *RegisterResponse) error {
+
+	if err := ValidateServiceData(req.Service); err != nil {
+		return err
 	}
+	if !serviceExists(req.Service, d.Services) {
+		d.Services = append(d.Services, req.Service)
+		return nil
+	}
+	return fmt.Errorf("service already registered")
 }
 
 // List lists the services registered with the discovery service.
-func (d *Discovery) List(ctx context.Context, req *ListRequest, res *ListResponse) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-		res.Services = d.Services
-		return nil
-	}
+func (d *Discovery) List(req *ListRequest, res *ListResponse) error {
+	res.Services = d.Services
+	return nil
 }
 
 func (d *Discovery) Start() error {
 	rpc.Register(d)
-	ln, err := net.Listen("tcp", ":8081")
+	ln, err := net.Listen("tcp", ":8091")
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("%s", ln.Addr().String())
 	d.ln = ln
-	go func() {
-		for {
-			conn, err := ln.Accept()
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			go rpc.ServeConn(conn)
+
+	for {
+		conn, err := ln.Accept()
+		if err != nil {
+			log.Println(err)
+			continue
+
 		}
-	}()
-	return nil
+		go rpc.ServeConn(conn)
+	}
 }
 func (d *Discovery) Stop() error {
 	if d.ln != nil {

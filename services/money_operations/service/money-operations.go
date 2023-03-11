@@ -1,6 +1,7 @@
 package service
 
 import (
+	"atm-machine/services/discovery/service"
 	"fmt"
 	"net"
 	"net/rpc"
@@ -61,14 +62,28 @@ func (m *MoneyOperations) GetBalance(req *GetBalanceRequest, res *GetBalanceResp
 func (m *MoneyOperations) Start() error {
 	rpc.Register(m)
 	rpc.HandleHTTP()
-	m.Port = "8080"
+	m.Port = "8092"
 	m.Status = "Running"
 	m.Stats = make(map[string]int)
 	m.Stats["TotalWithdrawals"] = 0
 	ln, err := net.Listen("tcp", ":"+m.Port)
+	fmt.Printf("%s", ln.Addr().String())
+
 	if err != nil {
 		return err
 	}
+
+	// Create an RPC client to connect to the discovery service
+	client, err := rpc.Dial("tcp", "localhost:8091")
+	if err != nil {
+		return err
+	}
+
+	err = client.Call("Discovery.Register", service.RegisterRequest{Service: &service.Service{Name: "MoneyOperations", Addr: m.Port}}, &service.RegisterResponse{})
+	if err != nil {
+		return err
+	}
+
 	rpc.Accept(ln)
 	return nil
 }
