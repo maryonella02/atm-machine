@@ -37,8 +37,7 @@ func (c *Client) GetBalance(cardNumber, token string) (int, error) {
 
 	req := service.GetBalanceRequest{
 		CardNumber: cardNumber,
-
-		Token: token,
+		Token:      token,
 	}
 	res := service.GetBalanceResponse{}
 	if err := conn.Call("Gateway.GetBalance", &req, &res); err != nil {
@@ -57,8 +56,7 @@ func (c *Client) Withdraw(cardNumber, token string, amount int) (int, error) {
 	req := service.WithdrawRequest{
 		Token:      token,
 		CardNumber: cardNumber,
-
-		Amount: amount,
+		Amount:     amount,
 	}
 	res := service.WithdrawResponse{}
 	if err := conn.Call("Gateway.Withdraw", &req, &res); err != nil {
