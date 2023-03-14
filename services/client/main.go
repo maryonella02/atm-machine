@@ -8,7 +8,7 @@ import (
 
 func main() {
 	c := &service.Client{
-		Addr: "localhost:8090",
+		Addr: "atm-machine:8090",
 	}
 
 	token, err := c.Authenticate("1234567890", "1234")

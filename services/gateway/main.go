@@ -15,7 +15,7 @@ func main() {
 
 	// Create a Gateway instance and register it as an RPC server.
 	gateway := &service.Gateway{
-		DiscoveryAddr: "localhost:8091",
+		DiscoveryAddr: "atm-machine:8091",
 		Cache:         lruCache,
 	}
 	rpc.Register(gateway)

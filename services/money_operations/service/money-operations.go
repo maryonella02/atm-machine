@@ -67,6 +67,7 @@ var (
 func init() {
 	prometheus.MustRegister(getBalanceCounter)
 	prometheus.MustRegister(getBalanceDuration)
+	prometheus.MustRegister(totalWithdrawals)
 }
 func (m *MoneyOperations) ServiceStatus(req *ServiceStatusRequest, res *ServiceStatusResponse) error {
 	res.Status = m.Status
@@ -103,13 +104,10 @@ func (m *MoneyOperations) Start() error {
 	rpc.Register(m)
 	rpc.HandleHTTP()
 
-	// Register Prometheus metrics
-	prometheus.MustRegister(totalWithdrawals)
-
 	// Start Prometheus metrics server
 	go func() {
 		http.Handle("/metrics", promhttp.Handler())
-		http.ListenAndServe(":8080", nil)
+		http.ListenAndServe(":8093", nil)
 	}()
 
 	// start the RPC server
@@ -125,7 +123,7 @@ func (m *MoneyOperations) Start() error {
 	}
 
 	// Create an RPC client to connect to the discovery service
-	client, err := rpc.Dial("tcp", "localhost:8091")
+	client, err := rpc.Dial("tcp", "atm-machine:8091")
 	if err != nil {
 		return err
 	}
