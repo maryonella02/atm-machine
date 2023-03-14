@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  gateway:
+    build:
+      dockerfile: gateway.Dockerfile
+      context: ./
+    container_name: gateway
+    expose:
+      - "8090"
+    ports:
+      - "8090:8090"
+
+
+
+  discovery:
+    build:
+      dockerfile: discovery.Dockerfile
+      context: ./
+    container_name: discovery
+    expose:
+      - "8091"
+    ports:
+      - "8091:8091"
+    depends_on:
+      - gateway
+
+
+
+  money_operations:
+    build:
+      dockerfile: money.Dockerfile
+      context: ./
+    container_name: money-operations
+    ports:
+      - "8092:8092"
+      - "8093:8093"
+    depends_on:
+      - gateway
+      - discovery
+
+  client:
+    build:
+      context: ./
+      dockerfile: client.Dockerfile
+    container_name: client
+    depends_on:
+      - money_operations
+
+
+
+  prometheus:
+    image: prom/prometheus:v2.31.0
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+
+
+  grafana:
+    image: grafana/grafana:9.4.3
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+
+
+volumes:
+  prometheus_data:
