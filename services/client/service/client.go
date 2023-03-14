@@ -2,6 +2,7 @@ package service
 
 import (
 	"atm-machine/services/gateway/service"
+	"log"
 	"net/rpc"
 )
 
@@ -22,9 +23,10 @@ func (c *Client) Authenticate(cardNumber string, pin string) (string, error) {
 	}
 	res := service.AuthenticateResponse{}
 	if err := conn.Call("Gateway.Authenticate", &req, &res); err != nil {
+		log.Printf("Error in Authenticate RPC call: %v", err)
 		return "", err
 	}
-	println("authenticated", res.Token)
+	log.Printf("Authenticated: cardNumber=%v, token=%v", cardNumber, res.Token)
 	return res.Token, nil
 }
 
@@ -41,8 +43,10 @@ func (c *Client) GetBalance(cardNumber, token string) (int, error) {
 	}
 	res := service.GetBalanceResponse{}
 	if err := conn.Call("Gateway.GetBalance", &req, &res); err != nil {
+		log.Printf("Error in GetBalance RPC call: %v", err)
 		return 0, err
 	}
+	log.Printf("Got balance: cardNumber=%v, balance=%v", cardNumber, res.Balance)
 	return res.Balance, nil
 }
 
@@ -60,7 +64,9 @@ func (c *Client) Withdraw(cardNumber, token string, amount int) (int, error) {
 	}
 	res := service.WithdrawResponse{}
 	if err := conn.Call("Gateway.Withdraw", &req, &res); err != nil {
+		log.Printf("Error in Withdraw RPC call: %v", err)
 		return 0, err
 	}
+	log.Printf("Withdrew amount: cardNumber=%v, amount=%v, newBalance=%v", cardNumber, amount, res.Balance)
 	return res.Balance, nil
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"log"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -42,7 +43,7 @@ type ServiceStatusResponse struct {
 
 var totalWithdrawals = prometheus.NewCounter(
 	prometheus.CounterOpts{
-		Name: "money_operations_total_withdrawals",
+		Name: "money_operations_withdrawals_total",
 		Help: "The total number of withdrawals made",
 	},
 )
@@ -69,7 +70,9 @@ func init() {
 	prometheus.MustRegister(getBalanceDuration)
 	prometheus.MustRegister(totalWithdrawals)
 }
+
 func (m *MoneyOperations) ServiceStatus(req *ServiceStatusRequest, res *ServiceStatusResponse) error {
+	log.Printf("ServiceStatus request received")
 	res.Status = m.Status
 	res.Port = m.Port
 	res.Stats = m.Stats
@@ -77,6 +80,7 @@ func (m *MoneyOperations) ServiceStatus(req *ServiceStatusRequest, res *ServiceS
 }
 
 func (m *MoneyOperations) Withdraw(req *WithdrawRequest, res *WithdrawResponse) error {
+	log.Printf("Withdraw request received: amount=%d", req.Amount)
 	if m.Balance < req.Amount {
 		return fmt.Errorf("insufficient funds")
 	}
@@ -89,6 +93,7 @@ func (m *MoneyOperations) Withdraw(req *WithdrawRequest, res *WithdrawResponse) 
 }
 
 func (m *MoneyOperations) GetBalance(req *GetBalanceRequest, res *GetBalanceResponse) error {
+	log.Printf("GetBalance request received")
 	start := time.Now()
 
 	res.Balance = m.Balance
@@ -99,6 +104,7 @@ func (m *MoneyOperations) GetBalance(req *GetBalanceRequest, res *GetBalanceResp
 }
 
 func (m *MoneyOperations) Start() error {
+	log.Printf("Starting MoneyOperations service")
 
 	// register the RPC methods
 	rpc.Register(m)
@@ -116,22 +122,24 @@ func (m *MoneyOperations) Start() error {
 	m.Stats = make(map[string]int)
 	m.Stats["TotalWithdrawals"] = 0
 	ln, err := net.Listen("tcp", ":"+m.Port)
-	fmt.Printf("%s", ln.Addr().String())
+	log.Printf("Listening on %s", ln.Addr().String())
 
 	if err != nil {
 		return err
 	}
 
 	// Create an RPC client to connect to the discovery service
-	client, err := rpc.Dial("tcp", "atm-machine:8091")
+	client, err := rpc.Dial("tcp", "discovery:8091")
 	if err != nil {
 		return err
 	}
 
 	err = client.Call("Discovery.Register", service.RegisterRequest{Service: &service.Service{Name: "MoneyOperations", Addr: m.Port}}, &service.RegisterResponse{})
 	if err != nil {
-		return err
+		log.Fatalf("Failed to register MoneyOperations service with the discovery service: %v", err)
 	}
+
+	log.Printf("Registered with discovery service: %s", m.Port)
 
 	rpc.Accept(ln)
 

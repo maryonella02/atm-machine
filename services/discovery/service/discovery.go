@@ -32,12 +32,12 @@ type ListResponse struct {
 }
 
 func (d *Discovery) Register(req *RegisterRequest, res *RegisterResponse) error {
-
 	if err := ValidateServiceData(req.Service); err != nil {
 		return err
 	}
 	if !serviceExists(req.Service, d.Services) {
 		d.Services = append(d.Services, req.Service)
+		log.Printf("Registered service name: %s, address: %s\n", req.Service.Name, req.Service.Addr)
 		return nil
 	}
 	return fmt.Errorf("service already registered")
@@ -56,7 +56,7 @@ func (d *Discovery) Start() error {
 		return err
 	}
 
-	fmt.Printf("%s", ln.Addr().String())
+	log.Printf("Discovery service started on %s\n", ln.Addr().String())
 	d.ln = ln
 
 	for {
@@ -69,6 +69,7 @@ func (d *Discovery) Start() error {
 		go rpc.ServeConn(conn)
 	}
 }
+
 func (d *Discovery) Stop() error {
 	if d.ln != nil {
 		err := d.ln.Close()
